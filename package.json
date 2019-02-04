@@ -1,0 +1,31 @@
+{
+  "name": "@talltotal/wx-bluetooth",
+  "version": "0.0.1",
+  "description": "微信小程序蓝牙",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "rollup -i ./src/index.js -f umd -w -o examples/bt.js --name bt",
+    "build": "node ./build/build.js",
+    "test": "karma start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/talltotal/wx-bluetooth.git"
+  },
+  "keywords": [
+    "微信小程序",
+    "蓝牙"
+  ],
+  "author": "talltotal",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/talltotal/wx-bluetooth/issues"
+  },
+  "homepage": "https://github.com/talltotal/wx-bluetooth#readme",
+  "devDependencies": {
+    "terser": "^3.16.0",
+    "karma": "^4.0.0",
+    "rollup": "^1.1.2"
+  }
+}
