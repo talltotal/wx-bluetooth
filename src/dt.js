@@ -1,7 +1,11 @@
+import BT from './index'
 import { Options, DevicesMap, DevicesIdMap } from './share'
 import { Device } from './device/index'
-import BT from './index'
 import { arrayBufferToHex } from './util/util'
+import {
+  FAIL_TYPE_SERVICE,
+  FAIL_TYPE_CHARACTERISTIC,
+} from './util/constants'
 
 let isInitBt = false
 let isSearching = false
@@ -26,7 +30,7 @@ export function openAdapter () {
     },
     fail: res => {
       console.log('openBluetoothAdapter fail', res)
-      BT.trigger('fail', '开启蓝牙失败', 1)
+      BT.trigger('fail', '开启蓝牙失败')
       if (res.errCode === 10001) {
         _checkBluetooth()
       } else {
@@ -47,7 +51,7 @@ export function addListener () {
     for (let i = 0; i < len; i ++) {
       const dev = devices[i]
       const deviceId = dev.deviceId
-      if (!DevicesMap[deviceId] && Options.canAdd2DeivceMap(dev)) {
+      if (!DevicesMap[deviceId]) {
         const uid = Options.getUid(dev)
         let newDevInst = null
         if (DevicesIdMap[uid]) {
@@ -68,7 +72,7 @@ export function addListener () {
     const dev = DevicesMap[deviceId]
     if (!dev) return
 
-    dev.changeConnectState(connected)
+    dev._changeConnectState(connected)
   })
 
   // 3 蓝牙适配器状态变更
@@ -90,7 +94,7 @@ export function addListener () {
     if (!dev) return
 
     const str = arrayBufferToHex(value)
-    dev.trigger('msg', Options.changeBackValue(str))
+    dev._receiveValue(str)
   })
 }
 
@@ -125,8 +129,9 @@ export function getService (deviceId) {
         }
       }
     },
-    fail: (info) => {
-      console.log('getBLEDeviceServices fail', JSON.stringify(info))
+    fail: (res) => {
+      console.log('getBLEDeviceServices fail', JSON.stringify(res))
+      DevicesMap[deviceId].trigger('fail', FAIL_TYPE_SERVICE, res)
     }
   })
 }
@@ -170,14 +175,14 @@ function getCharacteristics (serviceId, deviceId) {
        * 没有write也没有notify？？？
        */
       if (deviceWR && hasNotify) {
-        const dev = DevicesMap[deviceId]
-        dev.canWrite(deviceWR)
+        DevicesMap[deviceId]._receiveWR(deviceWR)
       } else {
         console.log('?')
       }
     },
     fail (res) {
-      console.error('getBLEDeviceCharacteristics', res)
+      console.error('getBLEDeviceCharacteristics', JSON.stringify(res))
+      DevicesMap[deviceId].trigger('fail', FAIL_TYPE_CHARACTERISTIC, res)
     }
   })
 }
@@ -233,7 +238,7 @@ export function connect (deviceId, onSuccess, onFail) {
       if (res.errCode === 10001) {
         _checkBluetooth()
       }
-      onFail()
+      onFail(res)
     }
   })
 }
@@ -248,7 +253,7 @@ function _checkBluetooth () {
         this.listenChange = true
       } else if (res.cancel) {
         this.listenChange = false
-        BT.trigger('cancel', null, 1)
+        BT.trigger('cancel')
       }
     }
   })

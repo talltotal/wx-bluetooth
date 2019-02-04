@@ -1,6 +1,9 @@
 import { Options } from '../share'
 import { connect, getService } from '../dt'
 import { isIos, hexToArrayBuffer } from '../util/util'
+import {
+  FAIL_TYPE_CONNECT,
+} from '../util/constants'
 
 export function initBt (dev) {
   dev.deviceWR = null
@@ -12,28 +15,35 @@ export function initBt (dev) {
 }
 
 export function btMixin (Device) {
+  Device.prototype._receiveValue = function (str) {
+    dev.trigger('msg', Options.changeBackValue(str))
+  }
+
   Device.prototype.connect = function () {
     if (this.isUnConnected() && this._deviceId) {
-      this.startConnect()
+      this._startConnect()
       connect(this._deviceId, () => {
-        this.changeConnectState(true)
-        this._write()
+        this._changeConnectState(true)
       },
-      () => {
-        this.changeConnectState(false)
-        this.trigger('connectFail')
+      (err) => {
+        this._changeConnectState(false)
+        this.trigger('fail', FAIL_TYPE_CONNECT, err)
       })
     }
   }
 
-  Device.prototype.getService = function () {
+  Device.prototype.disconnect = function () {
+    this._disconnect()
+  }
+
+  Device.prototype._getService = function () {
     getService(this._deviceId)
   }
 
-  Device.prototype.canWrite = function (deviceWR) {
+  Device.prototype._receiveWR = function (deviceWR) {
     this.deviceWR = deviceWR
 
-    this.trigger('ready')
+    this._ready()
   }
 
   Device.prototype.write = function () {
@@ -43,6 +53,8 @@ export function btMixin (Device) {
 
     if (this._writeTimes > 255) {
       console.error('write too many times!')
+      this.trigger('fail', FAIL_TYPE_WRITE, 'write too many times!')
+
       wx.closeBLEConnection({
         deviceId
       })
@@ -54,8 +66,8 @@ export function btMixin (Device) {
   }
 
   Device.prototype._write = function () {
-    if (this.isConnected() && !this._writing && this._writeQueue.length) {
-      const data = Options.changeToValue(this._writeQueue[0])
+    if (this.isReady() && !this._writing && this._writeQueue.length) {
+      const data = Options.changeToValue(this._writeQueue.shift())
       this._subWrite(hexToArrayBuffer(data))
     }
   }

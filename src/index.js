@@ -10,10 +10,11 @@
  *  1. 写 - writeBLECharacteristicValue: value
  *  2. 读 - onBLECharacteristicValueChange: res.value
  */
+import Emitter from './util/emitter'
 import { init, get } from './dt'
 import { Options, DevicesMap, DevicesIdMap } from './share'
 import { isObject } from './util/util'
-import Emitter from './util/emitter'
+import * as CONST from './util/constants'
 
 export default function bt (options) {
   if (isObject(options)) {
@@ -26,6 +27,7 @@ export default function bt (options) {
 
   init()
 }
+bt.CONST = CONST
 bt.get = get
 
 bt.options = Options

@@ -12,3 +12,13 @@ export const WX_ERR_CORD = {
   '10009': '系统版本低于 4.3 不支持BLE',
 }
 
+export const FAIL_TYPE_CONNECT = 1
+export const FAIL_TYPE_SERVICE = 2
+export const FAIL_TYPE_CHARACTERISTIC = 3
+export const FAIL_TYPE_WRITE = 4
+
+export const CONNECT_STATE_UNLINK = -1
+export const CONNECT_STATE_LINKING = 0
+export const CONNECT_STATE_LINKED = 1
+export const CONNECT_STATE_READY = 3
+export const CONNECT_STATE_UNLINING = -2
